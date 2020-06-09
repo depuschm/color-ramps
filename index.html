@@ -5,12 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hue Shifting</title>
 	
-	<!--<script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>-->
-	<script src="lib/svg.min.js"></script>
+	<!-- Color-Picker -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+	
+	<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.es5.min.js"></script>
+	
+	<!-- SVG.js -->
+	<script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+	<!--<script src="lib/svg.min.js"></script>-->
 	<script src="js/main.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/main.css">
   </head>
   <body>
 	 <!--<button type="button" onclick="ConstructColorScheme()">Construct Scheme</button>--> 
+	 <scheme></scheme>
+	 <br> Click to choose base color: <div class="color-picker"></div>
   </body>
 </html>

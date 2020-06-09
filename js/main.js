@@ -4,44 +4,53 @@
 // We use Photoshop scaling:
 // - Hue argument is within a range of 0-359
 // - Saturation and Value arguments are withing range of 0-100
-/*let hue = 0;
+let hue = 0;
 let saturation = 70;
-let value = 90;*/
+let value = 90;
 /*let hue = 200;
 let saturation = 70;
 let value = 70;*/
-let hue = 350;
+/*let hue = 350;
 let saturation = 70;
-let value = 80;
+let value = 80;*/
 
-let rgb = hsvToRgb(hue, saturation, value);
-let color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+// https://www.sitepoint.com/get-url-parameters-with-javascript/
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+let paramHue = urlParams.get('h');
+let paramSaturation = urlParams.get('s');
+let paramValue = urlParams.get('v');
+if (paramHue != null) hue = paramHue;
+if (paramSaturation != null) saturation = paramSaturation;
+if (paramValue != null) value = paramValue;
 
-window.onload = ConstructColorScheme;
+let rgb, color;
 
-let hueChange = 20;
-let saturationChange = 5;
-let valueChange = 20;
+window.onload = InitHueShifting;
+
+let draw;
+
+let hueChange, saturationChange, valueChange;
+
+let amountOfColors = 7; // 7 is normal
+let baseAmountOfColors = 7;
+let rectWidth = 40;
+let rectHeight = 40;
 
 // Uses SVG.js
 // Link: https://svgjs.com/docs/3.0/
-function ConstructColorScheme() {
-	let amountOfColors = 10; // 7 is normal
-	let baseAmountOfColors = 7;
-	let rectWidth = 40;
-	let rectHeight = 40;
+function InitHueShifting() {
+	CreateColorPicker();
 	
 	/*let hueChange = 20;
 	let saturationChange = 5;
 	let valueChange = 20;*/
 	
-	let stopAtValue = 10;
+	//let stopAtValue = 10;
 	
-	let draw = SVG().addTo('body')
+	// Create SVG node
+	draw = SVG().addTo('scheme')
 	    .size(2*amountOfColors*rectWidth + rectWidth, rectHeight);
-	
-	draw.rect(rectWidth, rectHeight).attr({ fill: color })
-	    .move(amountOfColors*rectWidth, 0);
 	
 	/*let distanceToMaxValue = 100 - value;
 	let distanceToMinValue = value;
@@ -70,15 +79,32 @@ function ConstructColorScheme() {
 		//if (value <= stopAtValue) break;
 	}*/
 	
+	DrawColorScheme(hue, saturation, value);
+}
+
+// parameters are hue, saturation, value of base (= middle) color
+function DrawColorScheme(hue, saturation, value) {
+	// Draw base color
+	rgb = hsvToRgb(hue, saturation, value);
+	console.log();
+	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+	draw.rect(rectWidth, rectHeight).attr({ fill: color })
+	    .move(amountOfColors*rectWidth, 0);
+	
+	// Draw rest
 	let colorVariationScale = baseAmountOfColors / amountOfColors;
 	
 	let baseHue = hue;
 	let baseSaturation = saturation;
 	let baseValue = value;
 	
+	// linear change for saturation and value
+	// -> TODO: gauss distribution would fit better than linear
+	// hue has not linear change
+	
 	hueChange = 10;
-	saturationChange = 20; // -- few steps -> higher saturationChange
-	valueChange = 20;
+	saturationChange = 10; // -- few steps -> higher saturationChange
+	valueChange = 15;
 	
 	ApplyScale(colorVariationScale);
 	
@@ -87,20 +113,16 @@ function ConstructColorScheme() {
 		saturation -= saturationChange;
 		value += valueChange;
 		
-		rgb = hsvToRgb(hue, saturation, value);
-		color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
-		
-		draw.rect(rectWidth, rectHeight).attr({ fill: color })
-		    .move(amountOfColors*rectWidth + rectWidth*i, 0);
+		DrawRectangle(hue, saturation, value);
 	}
 	
 	hue = baseHue;
 	saturation = baseSaturation;
 	value = baseValue;
 	
-	hueChange = 20;
-	saturationChange = 5; // -- lot of steps -> lower saturationChange
-	valueChange = 20;
+	hueChange = 23;
+	saturationChange = 10; // -- lot of steps -> lower saturationChange
+	valueChange = 15;
 	
 	ApplyScale(colorVariationScale);
 	
@@ -109,11 +131,7 @@ function ConstructColorScheme() {
 		saturation -= saturationChange;
 		value -= valueChange;
 		
-		rgb = hsvToRgb(hue, saturation, value);
-		color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
-		
-		draw.rect(rectWidth, rectHeight).attr({ fill: color })
-		    .move(amountOfColors*rectWidth + rectWidth*i, 0);
+		DrawRectangle(hue, saturation, value);
 	}
 }
 
@@ -123,13 +141,13 @@ function ApplyScale(scale) {
 	valueChange *= scale;
 }
 
-/*function DrawRectangle(hue, saturation, value) {
+function DrawRectangle(hue, saturation, value) {
 	rgb = hsvToRgb(hue, saturation, value);
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	
 	draw.rect(rectWidth, rectHeight).attr({ fill: color })
 		.move(amountOfColors*rectWidth + rectWidth*i, 0);
-}*/
+}
 
 /*function inRange(n, min, max) {
 	return n >= min && n <= max;
@@ -246,4 +264,58 @@ function hsvToRgb(h, s, v) {
         Math.round(g * 255), 
         Math.round(b * 255)
     ];
+}
+
+// https://github.com/Simonwep/pickr
+function CreateColorPicker() {
+	// Simple example, see optional options for more configuration.
+	const pickr = Pickr.create({
+		el: '.color-picker',
+		theme: 'classic', // or 'monolith', or 'nano'
+		defaultRepresentation: 'HSVA',
+		default: '#e64545',
+
+		swatches: [
+		    'hsla(0, 75, 58, 1)',
+			'hsla(24, 75, 58, 1)',
+			'hsla(48, 75, 58, 1)',
+			'hsla(72, 75, 58, 1)',
+			'hsla(96, 75, 58, 1)',
+			'hsla(120, 75, 58, 1)',
+			'hsla(144, 75, 58, 1)',
+			'hsla(168, 75, 58, 1)',
+			'hsla(192, 75, 58, 1)',
+			'hsla(216, 75, 58, 1)',
+			'hsla(240, 75, 58, 1)',
+			'hsla(264, 75, 58, 1)',
+			'hsla(288, 75, 58, 1)',
+			'hsla(312, 75, 58, 1)',
+			'hsla(336, 75, 58, 1)'
+		],
+
+		components: {
+
+			// Main components
+			preview: true,
+			hue: true,
+
+			// Input / output Options
+			interaction: {
+				hex: true,
+				rgba: true,
+				hsla: true,
+				hsva: true,
+				cmyk: true,
+				input: true
+				//save: true
+			}
+		}
+	});
+	
+	pickr.on('change', (color, instance) => {
+		instance.applyColor();
+		DrawColorScheme(color.h, color.s, color.v);
+	})/*.on('save', (color, instance) => {
+		instance.hide();
+	}).*/
 }
