@@ -1,0 +1,12 @@
+- Important links:
+https://www.youtube.com/watch?v=QhgSM_tnPM4
+https://opengameart.org/content/chapter-5-color-palettes
+https://lospec.com/pixel-art-tutorials/tags/palette
+http://pixeljoint.com/forum/forum_posts.asp?TID=11299&PD=0
+https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes (with function!)
+
+https://www.google.de/search?ei=ZOrfXs7mO8-Wa5rmk9gF&q=color+scheme+algorithm+pixelart
+
+Interesting links:
+- https://jariz.github.io/vibrant.js/
+- https://github.com/lokesh/color-thief
