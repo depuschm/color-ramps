@@ -49,7 +49,7 @@ function InitHueShifting() {
 	//let stopAtValue = 10;
 	
 	// Create SVG node
-	draw = SVG().addTo('scheme')
+	draw = SVG().addTo('colorramp')
 	    .size(2*amountOfColors*rectWidth + rectWidth, rectHeight);
 	
 	/*let distanceToMaxValue = 100 - value;
@@ -79,14 +79,16 @@ function InitHueShifting() {
 		//if (value <= stopAtValue) break;
 	}*/
 	
-	DrawColorScheme(hue, saturation, value);
+	DrawColorRamp(hue, saturation, value);
+	
+	LoadSampleImage();
 }
 
 // parameters are hue, saturation, value of base (= middle) color
-function DrawColorScheme(hue, saturation, value) {
+function DrawColorRamp(hue, saturation, value) {
 	// Draw base color
 	rgb = hsvToRgb(hue, saturation, value);
-	console.log();
+	
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	draw.rect(rectWidth, rectHeight).attr({ fill: color })
 	    .move(amountOfColors*rectWidth, 0);
@@ -147,6 +149,50 @@ function DrawRectangle(hue, saturation, value) {
 	
 	draw.rect(rectWidth, rectHeight).attr({ fill: color })
 		.move(amountOfColors*rectWidth + rectWidth*i, 0);
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
+// https://stackoverflow.com/questions/19262141/resize-image-with-javascript-canvas-smoothly
+let canvasPadding = 10;
+let ctx;
+
+function LoadSampleImage() {
+	let img = new Image();
+	//img.crossOrigin = 'anonymous';
+	img.src = 'img/dragon.png';
+	let canvas = document.getElementById('canvas');
+	ctx = canvas.getContext('2d');
+	img.onload = function() {
+	  // set size proportional to image
+	  let canvasWidth = img.width + 2*canvasPadding;
+	  let canvasHeight = img.height + 2*canvasPadding;
+	  
+	  ctx.canvas.width = canvasWidth;
+	  ctx.canvas.height = canvasWidth * (canvasHeight / canvasWidth);
+	  
+	  // Draw image
+	  ctx.drawImage(img, canvasPadding, canvasPadding);
+	  img.style.display = 'none';
+	  
+	  //RepaintImage();
+	};
+}
+
+function RepaintImage() {
+	console.log("s");
+	let imageData = ctx.getImageData(canvasPadding, canvasPadding,
+		canvas.width - canvasPadding, canvas.height - canvasPadding);
+	let data = imageData.data;
+	
+	for (let i = 0; i < data.length; i += 4) {
+      let avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+	  
+      data[i]     = avg; // red
+      data[i + 1] = avg; // green
+      data[i + 2] = avg; // blue
+    }
+	
+	ctx.putImageData(imageData, canvasPadding, canvasPadding);
 }
 
 /*function inRange(n, min, max) {
@@ -314,7 +360,7 @@ function CreateColorPicker() {
 	
 	pickr.on('change', (color, instance) => {
 		instance.applyColor();
-		DrawColorScheme(color.h, color.s, color.v);
+		DrawColorRamp(color.h, color.s, color.v);
 	})/*.on('save', (color, instance) => {
 		instance.hide();
 	}).*/
