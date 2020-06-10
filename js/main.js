@@ -153,34 +153,60 @@ function DrawRectangle(hue, saturation, value) {
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
 // https://stackoverflow.com/questions/19262141/resize-image-with-javascript-canvas-smoothly
-let canvasPadding = 10;
-let ctx;
+//let canvasPadding = 10;
+let imgScale = 2.0;
+//let maxScale = 6.0;
+let img;
+let svgImage;
+let init = false;
 
 function LoadSampleImage() {
-	let img = new Image();
-	//img.crossOrigin = 'anonymous';
+	// Load image
+	img = new Image();
 	img.src = 'img/dragon.png';
-	let canvas = document.getElementById('canvas');
-	ctx = canvas.getContext('2d');
+	
+	svgImage = SVG().addTo('svgimage');
+	//	.size(img.width * imgScale, img.height * imgScale);
+	
+	//let canvas = document.getElementById('imgCanvas');
+	//let ctx = canvas.getContext('2d');
+	
 	img.onload = function() {
 	  // set size proportional to image
-	  let canvasWidth = img.width + 2*canvasPadding;
+	  /*let canvasWidth = img.width + 2*canvasPadding;
 	  let canvasHeight = img.height + 2*canvasPadding;
 	  
 	  ctx.canvas.width = canvasWidth;
-	  ctx.canvas.height = canvasWidth * (canvasHeight / canvasWidth);
+	  ctx.canvas.height = canvasWidth * (canvasHeight / canvasWidth);*/
 	  
 	  // Draw image
-	  ctx.drawImage(img, canvasPadding, canvasPadding);
+	  /*ctx.drawImage(img, 0, 0);
 	  img.style.display = 'none';
+	  console.log(ctx.getImageData(0, 0, 1, 1).data);*/
 	  
-	  //RepaintImage();
+	  RepaintImage();
+	};
+	
+	// Initialize slider
+	let slider = document.getElementById("imageScale");
+	slider.value = imgScale * 100;
+
+	// Update the current slider value (each time you drag the slider handle)
+	slider.oninput = function() {
+		imgScale = this.value / 100;
+		
+		/*svgImage.each(function(i, children) {
+			this.transform({ scale: imgScale })
+		});*/
+		RepaintImage();
 	};
 }
 
 function RepaintImage() {
-	console.log("s");
-	let imageData = ctx.getImageData(canvasPadding, canvasPadding,
+	svgImage
+		.size(img.width * imgScale, img.height * imgScale);
+	
+	/*let imageData = ctx.getImageData(canvasPadding, canvasPadding,
 		canvas.width - canvasPadding, canvas.height - canvasPadding);
 	let data = imageData.data;
 	
@@ -192,7 +218,40 @@ function RepaintImage() {
       data[i + 2] = avg; // blue
     }
 	
-	ctx.putImageData(imageData, canvasPadding, canvasPadding);
+	ctx.putImageData(imageData, canvasPadding, canvasPadding);*/
+	let pos;
+	let width = img.width;
+	let height = img.height;
+	
+	if (!init) {
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				pos = x + y*width;
+				
+				svgImage.rect(Math.ceil(imgScale), Math.ceil(imgScale))
+					.attr({ fill: imageColors[pos] })
+					.move(Math.floor(x * imgScale), Math.floor(y * imgScale));
+			}
+		}
+		init = true;
+	}
+	else {
+		let pos;
+		let width = img.width;
+		let height = img.height;
+		let x = 0;
+		let y = 0;
+		let i = 0;
+		
+		svgImage.each(function(i, children) {
+			x = i % width;
+			y = Math.floor(i / width);
+			
+			this.size(Math.ceil(imgScale), Math.ceil(imgScale))
+				.move(Math.floor(x * imgScale), Math.floor(y * imgScale));
+			i++;
+		});
+	}
 }
 
 /*function inRange(n, min, max) {
