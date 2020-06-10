@@ -4,9 +4,12 @@
 // We use Photoshop scaling:
 // - Hue argument is within a range of 0-359
 // - Saturation and Value arguments are withing range of 0-100
-let hue = 92;
+let hue = 180;
+let saturation = 75;
+let value = 70;
+/*let hue = 92;
 let saturation = 56;
-let value = 52;
+let value = 52;*&
 /*let hue = 0;
 let saturation = 70;
 let value = 90;*/
@@ -37,14 +40,52 @@ let draw;
 
 let hueChange, saturationChange, valueChange;
 
-let amountOfColors = 4;
-let baseAmountOfColors = 4;
+let amountOfColorsPerSide = 4;
+let baseamountOfColorsPerSide = 4;
+let amountOfColors = 1 + amountOfColorsPerSide*2;
 let rectWidth = 40;
 let rectHeight = 40;
+
+let hues = [];
+let saturations = [];
+let values = [];
+
+let length = amountOfColors;
+hues.length = length;
+saturations.length = length;
+values.length = length;
 
 let colorsHex, colorsHSV;
 let colorRampElements = [];
 let initColorRamp = false;
+
+function SetRampColors(hue, saturation, value) {
+	// Initialize hue, saturation and value
+	/*for (i = 0; i <= amountOfColorsPerSide; i++) {
+		hue = mod(hue+hueChange, 360);
+	}*/
+	/*hue = mod(hue+hueChange*(amountOfColorsPerSide+1), 360);
+	saturation -= saturationChange * (amountOfColorsPerSide+1);
+	value += valueChange * (amountOfColorsPerSide+1);*/
+	hueChange = 20;
+	let startHue = mod(hue-hueChange*amountOfColorsPerSide, 360);
+	
+	// Initiatialize hues, saturations and values (color ramp colors)
+	for (let i = 0; i < length; i++) {
+		hues[i] = startHue + hueChange*i;
+	}
+	//hues = [100, 120, 140, 160, 180, 200, 220, 240, 260];
+	saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
+	values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
+	
+	//saturations = saturations.map(function(x) { return x * saturation/100; });
+	//values = values.map(function(x) { return x * value/100; });
+	
+	// Functions:
+	// hues[i] = 20*i
+	// saturations[i] = ?
+	// values[i] = ?
+}
 
 // Uses SVG.js
 // Link: https://svgjs.com/docs/3.0/
@@ -59,7 +100,7 @@ function InitHueShifting() {
 	
 	// Create SVG node
 	draw = SVG().addTo('colorramp')
-	    .size(2*amountOfColors*rectWidth + rectWidth, rectHeight);
+	    .size(amountOfColors*rectWidth, rectHeight);
 	
 	/*let distanceToMaxValue = 100 - value;
 	let distanceToMinValue = value;
@@ -68,11 +109,11 @@ function InitHueShifting() {
 	let scale = distanceToMaxValue / 100;
 	valueChange = baseValueChange * scale;*/
 	
-	//hue = mod(hue+hueChange*amountOfColors, 360);
-	//saturation += saturationChange*amountOfColors;
-	//value += valueChange*amountOfColors;
+	//hue = mod(hue+hueChange*amountOfColorsPerSide, 360);
+	//saturation += saturationChange*amountOfColorsPerSide;
+	//value += valueChange*amountOfColorsPerSide;
 	
-	/*for (i = -amountOfColors; i < amountOfColors; i++) {
+	/*for (i = -amountOfColorsPerSide; i < amountOfColorsPerSide; i++) {
 		hue = mod(hue-hueChange, 360);
 		saturation -= saturationChange;
 		value -= valueChange;
@@ -81,7 +122,7 @@ function InitHueShifting() {
 		color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 		
 		draw.rect(rectWidth, rectHeight).attr({ fill: color })
-		    .move(amountOfColors*rectWidth + rectWidth*i, 0);
+		    .move(amountOfColorsPerSide*rectWidth + rectWidth*i, 0);
 		
 		// If brigthness very low, stop
 		//if (inRange(value, 10, 90)) break;
@@ -97,85 +138,80 @@ function InitHueShifting() {
 
 // parameters are hue, saturation, value of base (= middle) color
 function DrawColorRamp(hue, saturation, value) {
+	SetRampColors(hue, saturation, value);
+	
 	colorsHex = [];
 	colorsHSV = [];
 	
 	// Draw color ramp
-	let colorVariationScale = baseAmountOfColors / amountOfColors;
+	//let colorVariationScale = baseamountOfColorsPerSide / amountOfColorsPerSide;
 	
-	let baseHue = hue;
-	let baseSaturation = saturation;
-	let baseValue = value;
+	//let baseHue = hue;
+	//let baseSaturation = saturation;
+	//let baseValue = value;
 	
 	// linear change for saturation and value
 	// -> TODO: gauss distribution would fit better than linear
 	// hue has not linear change
 	
-	hueChange = 10;
-	saturationChange = 10; // -- few steps -> higher saturationChange
-	valueChange = 15;
+	//hueChange = 10;
+	//saturationChange = 10; // -- few steps -> higher saturationChange
+	//valueChange = 15;
 	
-	ApplyScale(colorVariationScale);
-	
-	// Initialize hue, saturation and value
-	/*for (i = 0; i <= amountOfColors; i++) {
-		hue = mod(hue+hueChange, 360);
-	}*/
-	hue = mod(hue+hueChange*(amountOfColors+1), 360);
-	saturation -= saturationChange * (amountOfColors+1);
-	value += valueChange * (amountOfColors+1);
+	//ApplyScale(colorVariationScale);
 	
 	// Draw color ramp (left part)
-	for (i = -amountOfColors; i <= -1; i++) {
-		hue = mod(hue-hueChange, 360);
-		saturation += saturationChange;
-		value -= valueChange;
-		
-		DrawRectangle(i, hue, saturation, value);
-	}
+	/*for (let i = -amountOfColorsPerSide; i <= -1; i++) {
+		DrawRectangle(i);
+	}*/
 	
-	hue = baseHue;
-	saturation = baseSaturation;
-	value = baseValue;
+	//hue = baseHue;
+	//saturation = baseSaturation;
+	//value = baseValue;
 	
 	// Draw base color (middle)
-	DrawRectangle(0, hue, saturation, value);
+	//DrawRectangle(0);
 	
-	hueChange = 23;
-	saturationChange = 10; // -- lot of steps -> lower saturationChange
-	valueChange = 15;
+	//hueChange = 23;
+	//saturationChange = 10; // -- lot of steps -> lower saturationChange
+	//valueChange = 15;
 	
-	ApplyScale(colorVariationScale);
+	//ApplyScale(colorVariationScale);
 	
 	// Continue color ramp (right part)
-	for (i = 1; i <= amountOfColors; i++) {
-		hue = mod(hue-hueChange, 360);
-		saturation -= saturationChange;
-		value -= valueChange;
-		
-		DrawRectangle(i, hue, saturation, value);
+	/*for (let i = 1; i <= amountOfColorsPerSide; i++) {
+		DrawRectangle(i);
+	}*/
+	
+	let length = amountOfColors;
+	for (let i = 0; i < length; i++) {
+		DrawRectangle(i);
 	}
 	
 	initColorRamp = true;
 }
 
-function ApplyScale(scale) {
+/*function ApplyScale(scale) {
 	hueChange *= scale;
 	saturationChange *= scale;
 	valueChange *= scale;
-}
+}*/
 
-function DrawRectangle(i, hue, saturation, value) {
+function DrawRectangle(i) {
+	let hue = mod(hues[i], 360);
+	let saturation = saturations[i];
+	let value = values[i];
+	
 	rgb = hsvToRgb(hue, saturation, value);
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	
 	if (!initColorRamp) {
 		rampElement = draw.rect(rectWidth, rectHeight)
-			.move(amountOfColors*rectWidth + rectWidth*i, 0)
+			.move(i*rectWidth, 0)
 			.fill(color);
 		colorRampElements.push(rampElement);
 	} else {
-		colorRampElements[i+amountOfColors].fill(color);
+		colorRampElements[i].fill(color);
 	}
 	
 	hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
@@ -522,6 +558,7 @@ function ShowChart() {
 		},
 		options: {
 			responsive: true,
+			aspectRatio: 2,
 			title: {
 				display: true,
 				text: 'Change of HSV in color ramp'
@@ -559,6 +596,5 @@ function ShowChart() {
 	
 	// ShowGraph
 	let ctx = document.getElementById('canvas').getContext('2d');
-	ctx.canvas.width = window.innerWidth;
 	window.myLine = new Chart(ctx, config);
 }
