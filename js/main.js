@@ -4,9 +4,12 @@
 // We use Photoshop scaling:
 // - Hue argument is within a range of 0-359
 // - Saturation and Value arguments are withing range of 0-100
-let hue = 0;
+let hue = 92;
+let saturation = 56;
+let value = 52;
+/*let hue = 0;
 let saturation = 70;
-let value = 90;
+let value = 90;*/
 /*let hue = 200;
 let saturation = 70;
 let value = 70;*/
@@ -24,7 +27,9 @@ if (paramHue != null) hue = paramHue;
 if (paramSaturation != null) saturation = paramSaturation;
 if (paramValue != null) value = paramValue;
 
-let rgb, color;
+let rgb = hsvToRgb(hue, saturation, value);
+let baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+let color;
 
 window.onload = InitHueShifting;
 
@@ -32,10 +37,14 @@ let draw;
 
 let hueChange, saturationChange, valueChange;
 
-let amountOfColors = 7; // 7 is normal
-let baseAmountOfColors = 7;
+let amountOfColors = 4;
+let baseAmountOfColors = 4;
 let rectWidth = 40;
 let rectHeight = 40;
+
+let colors;
+let colorRampElements = [];
+let initColorRamp = false;
 
 // Uses SVG.js
 // Link: https://svgjs.com/docs/3.0/
@@ -86,14 +95,9 @@ function InitHueShifting() {
 
 // parameters are hue, saturation, value of base (= middle) color
 function DrawColorRamp(hue, saturation, value) {
-	// Draw base color
-	rgb = hsvToRgb(hue, saturation, value);
+	colors = [];
 	
-	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
-	draw.rect(rectWidth, rectHeight).attr({ fill: color })
-	    .move(amountOfColors*rectWidth, 0);
-	
-	// Draw rest
+	// Draw color ramp
 	let colorVariationScale = baseAmountOfColors / amountOfColors;
 	
 	let baseHue = hue;
@@ -110,17 +114,29 @@ function DrawColorRamp(hue, saturation, value) {
 	
 	ApplyScale(colorVariationScale);
 	
-	for (i = -1; i > -amountOfColors; i--) {
+	// Initialize hue, saturation and value
+	/*for (i = 0; i <= amountOfColors; i++) {
 		hue = mod(hue+hueChange, 360);
-		saturation -= saturationChange;
-		value += valueChange;
+	}*/
+	hue = mod(hue+hueChange*(amountOfColors+1), 360);
+	saturation -= saturationChange * (amountOfColors+1);
+	value += valueChange * (amountOfColors+1);
+	
+	// Draw color ramp (left part)
+	for (i = -amountOfColors; i <= -1; i++) {
+		hue = mod(hue-hueChange, 360);
+		saturation += saturationChange;
+		value -= valueChange;
 		
-		DrawRectangle(hue, saturation, value);
+		DrawRectangle(i, hue, saturation, value);
 	}
 	
 	hue = baseHue;
 	saturation = baseSaturation;
 	value = baseValue;
+	
+	// Draw base color (middle)
+	DrawRectangle(0, hue, saturation, value);
 	
 	hueChange = 23;
 	saturationChange = 10; // -- lot of steps -> lower saturationChange
@@ -128,13 +144,16 @@ function DrawColorRamp(hue, saturation, value) {
 	
 	ApplyScale(colorVariationScale);
 	
-	for (i = 1; i < amountOfColors; i++) {
+	// Continue color ramp (right part)
+	for (i = 1; i <= amountOfColors; i++) {
 		hue = mod(hue-hueChange, 360);
 		saturation -= saturationChange;
 		value -= valueChange;
 		
-		DrawRectangle(hue, saturation, value);
+		DrawRectangle(i, hue, saturation, value);
 	}
+	
+	initColorRamp = true;
 }
 
 function ApplyScale(scale) {
@@ -143,12 +162,26 @@ function ApplyScale(scale) {
 	valueChange *= scale;
 }
 
-function DrawRectangle(hue, saturation, value) {
+function DrawRectangle(i, hue, saturation, value) {
 	rgb = hsvToRgb(hue, saturation, value);
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	
-	draw.rect(rectWidth, rectHeight).attr({ fill: color })
-		.move(amountOfColors*rectWidth + rectWidth*i, 0);
+	if (!initColorRamp) {
+		rampElement = draw.rect(rectWidth, rectHeight)
+			.move(amountOfColors*rectWidth + rectWidth*i, 0)
+			.fill(color);
+		colorRampElements.push(rampElement);
+	} else {
+		colorRampElements[i+amountOfColors].fill(color);
+	}
+	
+	hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
+	colors.push(hex);
+}
+
+// https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
+function rgbToHex(r, g, b) {
+  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
@@ -158,7 +191,7 @@ let imgScale = 2.0;
 //let maxScale = 6.0;
 let img;
 let svgImage;
-let init = false;
+let initImage = false;
 
 function LoadSampleImage() {
 	// Load image
@@ -184,6 +217,7 @@ function LoadSampleImage() {
 	  img.style.display = 'none';
 	  console.log(ctx.getImageData(0, 0, 1, 1).data);*/
 	  
+	  ResizeImage();
 	  RepaintImage();
 	};
 	
@@ -198,11 +232,11 @@ function LoadSampleImage() {
 		/*svgImage.each(function(i, children) {
 			this.transform({ scale: imgScale })
 		});*/
-		RepaintImage();
+		ResizeImage();
 	};
 }
 
-function RepaintImage() {
+function ResizeImage() {
 	svgImage
 		.size(img.width * imgScale, img.height * imgScale);
 	
@@ -223,22 +257,19 @@ function RepaintImage() {
 	let width = img.width;
 	let height = img.height;
 	
-	if (!init) {
+	if (!initImage) {
 		for (let y = 0; y < height; y++) {
 			for (let x = 0; x < width; x++) {
 				pos = x + y*width;
 				
 				svgImage.rect(Math.ceil(imgScale), Math.ceil(imgScale))
-					.attr({ fill: imageColors[pos] })
-					.move(Math.floor(x * imgScale), Math.floor(y * imgScale));
+					.move(Math.floor(x * imgScale), Math.floor(y * imgScale))
+					.fill(imageColors[pos]);
 			}
 		}
-		init = true;
+		initImage = true;
 	}
 	else {
-		let pos;
-		let width = img.width;
-		let height = img.height;
 		let x = 0;
 		let y = 0;
 		let i = 0;
@@ -252,6 +283,21 @@ function RepaintImage() {
 			i++;
 		});
 	}
+}
+
+function RepaintImage() {
+	// Replace color array values
+	arrayLength = imageColorsChange.length;
+	for (let i = 0; i < arrayLength; i++) {
+		if (imageColorsChange[i][0] != '#') {
+			imageColors[i] = colors[imageColorsChange[i]];
+		}
+	}
+	console.log(imageColors.length);
+	// Repaint image
+	svgImage.each(function(i, children) {
+		this.fill(imageColors[i]);
+	});
 }
 
 /*function inRange(n, min, max) {
@@ -378,7 +424,7 @@ function CreateColorPicker() {
 		el: '.color-picker',
 		theme: 'classic', // or 'monolith', or 'nano'
 		defaultRepresentation: 'HSVA',
-		default: '#e64545',
+		default: baseColor,
 
 		swatches: [
 		    'hsla(0, 75, 58, 1)',
@@ -419,7 +465,9 @@ function CreateColorPicker() {
 	
 	pickr.on('change', (color, instance) => {
 		instance.applyColor();
-		DrawColorRamp(color.h, color.s, color.v);
+		let colorH = color.h != 360 ? color.h : 0;
+		DrawColorRamp(colorH, color.s, color.v);
+		RepaintImage();
 	})/*.on('save', (color, instance) => {
 		instance.hide();
 	}).*/
