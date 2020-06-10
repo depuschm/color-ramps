@@ -8,4 +8,5 @@ In short: First we pick a start color. We calculate the rest of the color scheme
 ### Technologies used
 These technologies are used to develop this website:
 - [SVG.js](https://github.com/svgdotjs/svg.js) (used to make SVG rectangles)
+- [Chart.js](https://github.com/chartjs/Chart.js) (used to make chart)
 - [Pickr](https://github.com/Simonwep/pickr) (used to make color picker)
