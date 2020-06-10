@@ -4,9 +4,9 @@
 // We use Photoshop scaling:
 // - Hue argument is within a range of 0-359
 // - Saturation and Value arguments are withing range of 0-100
-let hue = 180;
-let saturation = 75;
-let value = 70;
+let hue = 119;
+let saturation = 47;
+let value = 49;
 /*let hue = 92;
 let saturation = 56;
 let value = 52;*&
@@ -61,6 +61,12 @@ let initColorRamp = false;
 
 function SetRampColors(hue, saturation, value) {
 	// Initialize hue, saturation and value
+	//saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
+	//values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
+	
+	//saturation = saturations[amountOfColorsPerSide];
+	//value = values[amountOfColorsPerSide];
+	
 	/*for (i = 0; i <= amountOfColorsPerSide; i++) {
 		hue = mod(hue+hueChange, 360);
 	}*/
@@ -69,15 +75,24 @@ function SetRampColors(hue, saturation, value) {
 	value += valueChange * (amountOfColorsPerSide+1);*/
 	hueChange = 20;
 	let startHue = mod(hue-hueChange*amountOfColorsPerSide, 360);
+	//let startSaturation = hue-saturationChange * amountOfColorsPerSide;
+	//let startValue = value-valueChange * amountOfColorsPerSide;
+	//let startSaturation = saturations[0];
+	//let startValue = values[0];
 	
 	// Initiatialize hues, saturations and values (color ramp colors)
-	for (let i = 0; i < length; i++) {
+	/*for (let i = 0; i < length; i++) {
 		hues[i] = startHue + hueChange*i;
-	}
+	}*/
 	//hues = [100, 120, 140, 160, 180, 200, 220, 240, 260];
-	saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
-	values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
+	//saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
+	//values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
 	
+	hues =        [0, 190, 174, 150, 119, 100, 75, 60, 0];
+	saturations = [0, 48, 50, 67, 47, 60, 67, 43, 0]
+	values =      [0, 20, 25, 38, 49, 63, 75, 88, 100];
+	
+	//hues = hues.map(function(x) { return x * hue/100; });
 	//saturations = saturations.map(function(x) { return x * saturation/100; });
 	//values = values.map(function(x) { return x * value/100; });
 	
