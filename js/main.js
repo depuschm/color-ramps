@@ -42,7 +42,7 @@ let baseAmountOfColors = 4;
 let rectWidth = 40;
 let rectHeight = 40;
 
-let colors;
+let colorsHex, colorsHSV;
 let colorRampElements = [];
 let initColorRamp = false;
 
@@ -91,11 +91,14 @@ function InitHueShifting() {
 	DrawColorRamp(hue, saturation, value);
 	
 	LoadSampleImage();
+	
+	ShowChart();
 }
 
 // parameters are hue, saturation, value of base (= middle) color
 function DrawColorRamp(hue, saturation, value) {
-	colors = [];
+	colorsHex = [];
+	colorsHSV = [];
 	
 	// Draw color ramp
 	let colorVariationScale = baseAmountOfColors / amountOfColors;
@@ -176,7 +179,8 @@ function DrawRectangle(i, hue, saturation, value) {
 	}
 	
 	hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
-	colors.push(hex);
+	colorsHex.push(hex);
+	colorsHSV.push({hue: hue, saturation: saturation, value: value});
 }
 
 // https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -290,10 +294,10 @@ function RepaintImage() {
 	arrayLength = imageColorsChange.length;
 	for (let i = 0; i < arrayLength; i++) {
 		if (imageColorsChange[i][0] != '#') {
-			imageColors[i] = colors[imageColorsChange[i]];
+			imageColors[i] = colorsHex[imageColorsChange[i]];
 		}
 	}
-	console.log(imageColors.length);
+	
 	// Repaint image
 	svgImage.each(function(i, children) {
 		this.fill(imageColors[i]);
@@ -471,4 +475,90 @@ function CreateColorPicker() {
 	})/*.on('save', (color, instance) => {
 		instance.hide();
 	}).*/
+}
+
+// Example from: https://www.chartjs.org/samples/latest/charts/line/basic.html
+// Dataset from: https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes
+function ShowChart() {
+	var length = colorsHSV.length;
+	let colorIndices = [];
+	for (let i = 0; i < length; i++) {
+		colorIndices[i] = i;
+	}
+	
+	//let colorHues = [];
+	let colorSaturations = [];
+	let colorBrightness = [];
+	var length = colorsHSV.length;
+	for (let i = 0; i < length; i++) {
+		//colorHues[i] = Math.round(colorsHSV[i].hue / 360 * 100);
+		colorSaturations[i] = colorsHSV[i].saturation;
+		colorBrightness[i] = colorsHSV[i].value;
+	}
+
+	let config = {
+		type: 'line',
+		data: {
+			labels: colorIndices,
+			datasets: [/*{
+				label: 'Hue',
+				backgroundColor: window.chartColors.red,
+				borderColor: window.chartColors.red,
+				data: colorHues,
+				fill: false,
+			},*/ {
+				label: 'Saturation',
+				backgroundColor: window.chartColors.green,
+				borderColor: window.chartColors.green,
+				data: colorSaturations,
+				fill: false,
+			}, {
+				label: 'Brightness',
+				fill: false,
+				backgroundColor: window.chartColors.blue,
+				borderColor: window.chartColors.blue,
+				data: colorBrightness,
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: true,
+				text: 'Change of HSV in color ramp'
+			},
+			tooltips: {
+				mode: 'index',
+				intersect: false,
+			},
+			hover: {
+				mode: 'nearest',
+				intersect: true
+			},
+			scales: {
+				xAxes: [{
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'Color index'
+					}
+				}],
+				yAxes: [{
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'Value (in %)'
+					},
+					/*ticks: {
+						min: 0,
+						max: 100,
+					}*/
+				}]
+			}
+		}
+	};
+	
+	// ShowGraph
+	let ctx = document.getElementById('canvas').getContext('2d');
+	ctx.canvas.width = window.innerWidth;
+	window.myLine = new Chart(ctx, config);
 }
