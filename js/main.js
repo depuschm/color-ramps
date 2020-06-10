@@ -4,12 +4,40 @@
 // We use Photoshop scaling:
 // - Hue argument is within a range of 0-359
 // - Saturation and Value arguments are withing range of 0-100
-let hue = 119;
-let saturation = 47;
-let value = 49;
+let baseHue;
+let baseSaturation;
+let baseValue;
+
+let hues;
+let saturations;
+let values;
+
+let currentHues = [];
+let currentSaturations = [];
+let currentValues = [];
+
+let hueChanges = [];
+let saturationChanges = [];
+let valueChanges = [];
+
+let amountOfColorsPerSide = 4;
+let baseamountOfColorsPerSide = 4;
+let amountOfColors = 1 + amountOfColorsPerSide*2;
+let rectWidth = 40;
+let rectHeight = 40;
+
+let rgb;
+let baseColor;
+let color;
+
+SetBaseColor();
+
+/*let hue = 180;
+let saturation = 21;
+let value = 59;*/
 /*let hue = 92;
 let saturation = 56;
-let value = 52;*&
+let value = 52;*/
 /*let hue = 0;
 let saturation = 70;
 let value = 90;*/
@@ -21,43 +49,60 @@ let saturation = 70;
 let value = 80;*/
 
 // https://www.sitepoint.com/get-url-parameters-with-javascript/
-const queryString = window.location.search;
+/*const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 let paramHue = urlParams.get('h');
 let paramSaturation = urlParams.get('s');
 let paramValue = urlParams.get('v');
 if (paramHue != null) hue = paramHue;
 if (paramSaturation != null) saturation = paramSaturation;
-if (paramValue != null) value = paramValue;
-
-let rgb = hsvToRgb(hue, saturation, value);
-let baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
-let color;
-
-window.onload = InitHueShifting;
+if (paramValue != null) value = paramValue;*/
 
 let draw;
 
-let hueChange, saturationChange, valueChange;
-
-let amountOfColorsPerSide = 4;
-let baseamountOfColorsPerSide = 4;
-let amountOfColors = 1 + amountOfColorsPerSide*2;
-let rectWidth = 40;
-let rectHeight = 40;
-
+/*let length = amountOfColors;
 let hues = [];
 let saturations = [];
 let values = [];
-
-let length = amountOfColors;
 hues.length = length;
 saturations.length = length;
-values.length = length;
+values.length = length;*/
 
 let colorsHex, colorsHSV;
 let colorRampElements = [];
 let initColorRamp = false;
+
+window.onload = InitHueShifting;
+
+function SetBaseColor() {
+	currentHues.length = amountOfColors;
+	currentSaturations.length = amountOfColors;
+	currentValues.length = amountOfColors;
+	
+	hueChanges.length = amountOfColors;
+	saturationChanges.length = amountOfColors;
+	valueChanges.length = amountOfColors;
+
+	hues =        [0, 190, 174, 150, 119, 100, 75, 60, 0];
+	saturations = [0, 48, 50, 67, 47, 60, 67, 43, 0]
+	values =      [0, 20, 25, 38, 49, 63, 75, 88, 100];
+	
+	hueChanges[0] = hues[0];
+	saturationChanges[0] = saturations[0];
+	valueChanges[0] = values[0];
+	for (let i = 1; i < amountOfColors; i++) {
+		hueChanges[i] = hues[i] - hues[i-1];
+		saturationChanges[i] = saturations[i] - saturations[i-1];
+		valueChanges[i] = values[i] - values[i-1];
+	}
+	
+	baseHue = hues[amountOfColorsPerSide];
+	baseSaturation = saturations[amountOfColorsPerSide];
+	baseValue = values[amountOfColorsPerSide];
+	
+	rgb = hsvToRgb(baseHue, baseSaturation, baseValue);
+	baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+}
 
 function SetRampColors(hue, saturation, value) {
 	// Initialize hue, saturation and value
@@ -73,24 +118,33 @@ function SetRampColors(hue, saturation, value) {
 	/*hue = mod(hue+hueChange*(amountOfColorsPerSide+1), 360);
 	saturation -= saturationChange * (amountOfColorsPerSide+1);
 	value += valueChange * (amountOfColorsPerSide+1);*/
-	hueChange = 20;
+	/*hueChange = 20;
 	let startHue = mod(hue-hueChange*amountOfColorsPerSide, 360);
-	//let startSaturation = hue-saturationChange * amountOfColorsPerSide;
-	//let startValue = value-valueChange * amountOfColorsPerSide;
+	let startSaturation = saturation-saturationChange * amountOfColorsPerSide;
+	let startValue = value-valueChange * amountOfColorsPerSide;*/
 	//let startSaturation = saturations[0];
 	//let startValue = values[0];
 	
 	// Initiatialize hues, saturations and values (color ramp colors)
-	/*for (let i = 0; i < length; i++) {
+	/*for (let i = 0; i < amountOfColors; i++) {
 		hues[i] = startHue + hueChange*i;
-	}*/
+	}
 	//hues = [100, 120, 140, 160, 180, 200, 220, 240, 260];
-	//saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
-	//values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
+	saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
+	values = [15, 30, 45, 60, 70, 80, 90, 95, 100];*/
 	
-	hues =        [0, 190, 174, 150, 119, 100, 75, 60, 0];
-	saturations = [0, 48, 50, 67, 47, 60, 67, 43, 0]
-	values =      [0, 20, 25, 38, 49, 63, 75, 88, 100];
+	currentHues[0] = mod(hue - hues[amountOfColorsPerSide], 360);
+	currentSaturations[0] = saturation - saturations[amountOfColorsPerSide];
+	currentValues[0] = value - values[amountOfColorsPerSide];
+	for (let i = 1; i < amountOfColors; i++) {
+		currentHues[i] = currentHues[i-1] + hueChanges[i];
+		currentSaturations[i] = currentSaturations[i-1] + saturationChanges[i];
+		currentValues[i] = currentValues[i-1] + valueChanges[i];
+	}
+	
+	// Clamp values to valid interval (0-100)
+	//saturations = saturations.map(function(x) { return clamp(x, 0, 100); });
+	//values = values.map(function(x) { return clamp(x, 0, 100); });
 	
 	//hues = hues.map(function(x) { return x * hue/100; });
 	//saturations = saturations.map(function(x) { return x * saturation/100; });
@@ -100,6 +154,11 @@ function SetRampColors(hue, saturation, value) {
 	// hues[i] = 20*i
 	// saturations[i] = ?
 	// values[i] = ?
+}
+
+// https://stackoverflow.com/questions/11409895/whats-the-most-elegant-way-to-cap-a-number-to-a-segment
+function clamp(num, min, max) {
+	return num <= min ? min : num >= max ? max : num;
 }
 
 // Uses SVG.js
@@ -144,7 +203,7 @@ function InitHueShifting() {
 		//if (value <= stopAtValue) break;
 	}*/
 	
-	DrawColorRamp(hue, saturation, value);
+	DrawColorRamp(baseHue, baseSaturation, baseValue);
 	
 	LoadSampleImage();
 	
@@ -198,8 +257,7 @@ function DrawColorRamp(hue, saturation, value) {
 		DrawRectangle(i);
 	}*/
 	
-	let length = amountOfColors;
-	for (let i = 0; i < length; i++) {
+	for (let i = 0; i < amountOfColors; i++) {
 		DrawRectangle(i);
 	}
 	
@@ -213,9 +271,9 @@ function DrawColorRamp(hue, saturation, value) {
 }*/
 
 function DrawRectangle(i) {
-	let hue = mod(hues[i], 360);
-	let saturation = saturations[i];
-	let value = values[i];
+	let hue = mod(currentHues[i], 360);
+	let saturation = currentSaturations[i];
+	let value = currentValues[i];
 	
 	rgb = hsvToRgb(hue, saturation, value);
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
@@ -531,17 +589,15 @@ function CreateColorPicker() {
 // Example from: https://www.chartjs.org/samples/latest/charts/line/basic.html
 // Dataset from: https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes
 function ShowChart() {
-	var length = colorsHSV.length;
 	let colorIndices = [];
-	for (let i = 0; i < length; i++) {
+	for (let i = 0; i < amountOfColors; i++) {
 		colorIndices[i] = i;
 	}
 	
 	//let colorHues = [];
 	let colorSaturations = [];
 	let colorBrightness = [];
-	var length = colorsHSV.length;
-	for (let i = 0; i < length; i++) {
+	for (let i = 0; i < amountOfColors; i++) {
 		//colorHues[i] = Math.round(colorsHSV[i].hue / 360 * 100);
 		colorSaturations[i] = colorsHSV[i].saturation;
 		colorBrightness[i] = colorsHSV[i].value;
@@ -573,7 +629,6 @@ function ShowChart() {
 		},
 		options: {
 			responsive: true,
-			aspectRatio: 2,
 			title: {
 				display: true,
 				text: 'Change of HSV in color ramp'
