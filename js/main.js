@@ -8,13 +8,13 @@ let baseHue;
 let baseSaturation;
 let baseValue;
 
-let hues;
-let saturations;
-let values;
+let hues = [];
+let saturations = [];
+let values = [];
 
-let currentHues = [];
-let currentSaturations = [];
-let currentValues = [];
+let functionHues = [];
+let functionSaturations = [];
+let functionValues = [];
 
 let hueChanges = [];
 let saturationChanges = [];
@@ -29,8 +29,14 @@ let rectHeight = 40;
 let rgb;
 let baseColor;
 let color;
+let colorsHex = [];
+let colorRampElements = [];
 
-SetBaseColor();
+let functions = [];
+let currentFunction;
+
+initFunctions();
+setFunction(0);
 
 /*let hue = 180;
 let saturation = 21;
@@ -68,43 +74,97 @@ hues.length = length;
 saturations.length = length;
 values.length = length;*/
 
-let colorsHex, colorsHSV;
-let colorRampElements = [];
 let initColorRamp = false;
 
-window.onload = InitHueShifting;
+window.onload = initHueShifting;
 
-function SetBaseColor() {
-	currentHues.length = amountOfColors;
-	currentSaturations.length = amountOfColors;
-	currentValues.length = amountOfColors;
+function initFunctions() {
+	functions.length = 3;
+	functions[0] = {
+		// http://pixeljoint.com/forum/forum_posts.asp?TID=11299&PD=0
+		hues:        [0, 190, 174, 150, 119, 100, 75, 60,   0],
+		saturations: [0,  48,  50,  67,  47,  60, 67, 43,   0],
+		values:      [0,  20,  25,  38,  49,  63, 75, 88, 100]
+	}
+	functions[1] = {
+		// https://www.youtube.com/watch?v=QhgSM_tnPM4
+		hues:        [264, 305, 321, 336,  0, 24, 33, 40,  56],
+		saturations: [ 36,  60,  66,  68, 70, 62, 50, 35,   6],
+		values:      [ 16,  31,  45,  62, 89, 93, 95, 98, 100]
+	}
+	functions[2] = {
+		// https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes
+		hues:        [100, 120, 140, 160, 180, 200, 220, 240, 260],
+		saturations: [ 20,  40,  60,  70,  75,  60,  45,  30,  15],
+		values:      [ 15,  30,  45,  60,  70,  80,  90,  95, 100]
+	}
+}
+
+function initFunctionselection() {
+	let select = document.getElementById('selectFunction');
+	let option;
+	for (let i = 0; i < functions.length; i++) {
+		option = document.createElement('option');
+		option.text = "Function " + (i + 1);
+		option.value = i;
+		select.add(option);
+	}
+}
+
+function setFunction(i) {
+	currentFunction = i;
 	
+	// Set array lengths
 	hueChanges.length = amountOfColors;
 	saturationChanges.length = amountOfColors;
 	valueChanges.length = amountOfColors;
-
-	hues =        [0, 190, 174, 150, 119, 100, 75, 60, 0];
-	saturations = [0, 48, 50, 67, 47, 60, 67, 43, 0]
-	values =      [0, 20, 25, 38, 49, 63, 75, 88, 100];
 	
-	hueChanges[0] = hues[0];
-	saturationChanges[0] = saturations[0];
-	valueChanges[0] = values[0];
-	for (let i = 1; i < amountOfColors; i++) {
-		hueChanges[i] = hues[i] - hues[i-1];
-		saturationChanges[i] = saturations[i] - saturations[i-1];
-		valueChanges[i] = values[i] - values[i-1];
-	}
+	colorRampElements.length = amountOfColors;
+	colorsHex.length = amountOfColors;
 	
-	baseHue = hues[amountOfColorsPerSide];
-	baseSaturation = saturations[amountOfColorsPerSide];
-	baseValue = values[amountOfColorsPerSide];
+	hues.length = amountOfColors;
+	saturations.length = amountOfColors;
+	values.length = amountOfColors;
+	
+	// Set base and ramp colors
+	functionHues = functions[currentFunction].hues;
+	functionSaturations = functions[currentFunction].saturations;
+	functionValues = functions[currentFunction].values;
+	
+	baseHue = functionHues[amountOfColorsPerSide];
+	baseSaturation = functionSaturations[amountOfColorsPerSide];
+	baseValue = functionValues[amountOfColorsPerSide];
 	
 	rgb = hsvToRgb(baseHue, baseSaturation, baseValue);
 	baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+	
+	/*hues = functions[currentFunction].hues;
+	saturations = functions[currentFunction].saturations;
+	values = functions[currentFunction].values;
+	
+	setRampColors(
+		functions[currentFunction].hues[amountOfColorsPerSide],
+		functions[currentFunction].saturations[amountOfColorsPerSide],
+		functions[currentFunction].values[amountOfColorsPerSide]
+	);*/
+	
+	/*
+	for (let i = 0; i < amountOfColors; i++) {
+		rgb = hsvToRgb(hues[i], saturations[i], values[i]);
+		color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+		
+		hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
+		colorsHex[i] = hex;
+	}*/
 }
 
-function SetRampColors(hue, saturation, value) {
+function setFunctionAndUpdate(i) {
+	setFunction(i);
+	updateColorPicker();
+	//updateChart();
+}
+
+function setRampColors(hue, saturation, value) {
 	// Initialize hue, saturation and value
 	//saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
 	//values = [15, 30, 45, 60, 70, 80, 90, 95, 100];
@@ -133,18 +193,53 @@ function SetRampColors(hue, saturation, value) {
 	saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
 	values = [15, 30, 45, 60, 70, 80, 90, 95, 100];*/
 	
-	currentHues[0] = mod(hue - hues[amountOfColorsPerSide], 360);
-	currentSaturations[0] = saturation - saturations[amountOfColorsPerSide];
-	currentValues[0] = value - values[amountOfColorsPerSide];
+	// Set base and ramp colors
+	for (let i = 0; i < amountOfColors; i++) {
+		hues[i] = mod(functionHues[i] + hue, 360);
+		saturations[i] = functionSaturations[i] + saturation;
+		values[i] = functionValues[i] + value;
+	}
+	
+	baseHue = hues[amountOfColorsPerSide];
+	baseSaturation = saturations[amountOfColorsPerSide];
+	baseValue = values[amountOfColorsPerSide];
+	
+	rgb = hsvToRgb(baseHue, baseSaturation, baseValue);
+	baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+	
+	/*hueChanges[0] = 0;
+	saturationChanges[0] = 0;
+	valueChanges[0] = 0;*/
 	for (let i = 1; i < amountOfColors; i++) {
-		currentHues[i] = currentHues[i-1] + hueChanges[i];
-		currentSaturations[i] = currentSaturations[i-1] + saturationChanges[i];
-		currentValues[i] = currentValues[i-1] + valueChanges[i];
+		hueChanges[i] = hues[i] - hues[i-1];
+		saturationChanges[i] = saturations[i] - saturations[i-1];
+		valueChanges[i] = values[i] - values[i-1];
+	}
+	
+	/*hues[0] = hues[0];
+	saturations[0] = saturations[0];
+	values[0] = values[0];*/
+	/*currentHues[0] = mod(hue - hues[amountOfColorsPerSide], 360);
+	saturations[0] = saturation - saturations[amountOfColorsPerSide];
+	values[0] = value - values[amountOfColorsPerSide];*/
+	/*currentHues[0] = mod(hue - baseHue, 360);
+	saturations[0] = saturation - baseSaturation;
+	values[0] = value - baseValue;*/
+	//console.log(hue + "..." + hues[amountOfColorsPerSide] + "..." + currentHues[0]);
+	
+	//console.log(hue + "..." + baseHue + "..." + hues[0]);
+	/*hues[0] = hues[0];
+	saturations[0] = saturations[0];
+	values[0] = values[0];*/
+	for (let i = 1; i < amountOfColors; i++) {
+		hues[i] = hues[i-1] + hueChanges[i];
+		saturations[i] = saturations[i-1] + saturationChanges[i];
+		values[i] = values[i-1] + valueChanges[i];
 	}
 	
 	// Clamp values to valid interval (0-100)
-	//saturations = saturations.map(function(x) { return clamp(x, 0, 100); });
-	//values = values.map(function(x) { return clamp(x, 0, 100); });
+	saturations = saturations.map(function(x) { return clamp(x, 0, 100); });
+	values = values.map(function(x) { return clamp(x, 0, 100); });
 	
 	//hues = hues.map(function(x) { return x * hue/100; });
 	//saturations = saturations.map(function(x) { return x * saturation/100; });
@@ -163,8 +258,9 @@ function clamp(num, min, max) {
 
 // Uses SVG.js
 // Link: https://svgjs.com/docs/3.0/
-function InitHueShifting() {
-	CreateColorPicker();
+function initHueShifting() {
+	initFunctionselection();
+	createColorPicker();
 	
 	/*let hueChange = 20;
 	let saturationChange = 5;
@@ -203,19 +299,18 @@ function InitHueShifting() {
 		//if (value <= stopAtValue) break;
 	}*/
 	
-	DrawColorRamp(baseHue, baseSaturation, baseValue);
+	// Show chart
+	showChart();
 	
-	LoadSampleImage();
+	//drawColorRamp(baseHue, baseSaturation, baseValue);
+	drawColorRamp(0, 0, 0);
 	
-	ShowChart();
+	loadSampleImage();
 }
 
 // parameters are hue, saturation, value of base (= middle) color
-function DrawColorRamp(hue, saturation, value) {
-	SetRampColors(hue, saturation, value);
-	
-	colorsHex = [];
-	colorsHSV = [];
+function drawColorRamp(hue, saturation, value) {
+	setRampColors(hue, saturation, value);
 	
 	// Draw color ramp
 	//let colorVariationScale = baseamountOfColorsPerSide / amountOfColorsPerSide;
@@ -236,7 +331,7 @@ function DrawColorRamp(hue, saturation, value) {
 	
 	// Draw color ramp (left part)
 	/*for (let i = -amountOfColorsPerSide; i <= -1; i++) {
-		DrawRectangle(i);
+		drawRectangle(i);
 	}*/
 	
 	//hue = baseHue;
@@ -244,7 +339,7 @@ function DrawColorRamp(hue, saturation, value) {
 	//value = baseValue;
 	
 	// Draw base color (middle)
-	//DrawRectangle(0);
+	//drawRectangle(0);
 	
 	//hueChange = 23;
 	//saturationChange = 10; // -- lot of steps -> lower saturationChange
@@ -254,14 +349,15 @@ function DrawColorRamp(hue, saturation, value) {
 	
 	// Continue color ramp (right part)
 	/*for (let i = 1; i <= amountOfColorsPerSide; i++) {
-		DrawRectangle(i);
+		drawRectangle(i);
 	}*/
 	
 	for (let i = 0; i < amountOfColors; i++) {
-		DrawRectangle(i);
+		drawRectangle(i);
 	}
 	
 	initColorRamp = true;
+	updateChart();
 }
 
 /*function ApplyScale(scale) {
@@ -270,26 +366,25 @@ function DrawColorRamp(hue, saturation, value) {
 	valueChange *= scale;
 }*/
 
-function DrawRectangle(i) {
-	let hue = mod(currentHues[i], 360);
-	let saturation = currentSaturations[i];
-	let value = currentValues[i];
+function drawRectangle(i) {
+	let hue = mod(hues[i], 360);
+	let saturation = saturations[i];
+	let value = values[i];
 	
 	rgb = hsvToRgb(hue, saturation, value);
 	color = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	
 	if (!initColorRamp) {
-		rampElement = draw.rect(rectWidth, rectHeight)
+		let rampElement = draw.rect(rectWidth, rectHeight)
 			.move(i*rectWidth, 0)
 			.fill(color);
-		colorRampElements.push(rampElement);
+		colorRampElements[i] = rampElement;
 	} else {
 		colorRampElements[i].fill(color);
 	}
 	
 	hex = rgbToHex(rgb[0], rgb[1], rgb[2]);
-	colorsHex.push(hex);
-	colorsHSV.push({hue: hue, saturation: saturation, value: value});
+	colorsHex[i] = hex;
 }
 
 // https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -306,7 +401,7 @@ let img;
 let svgImage;
 let initImage = false;
 
-function LoadSampleImage() {
+function loadSampleImage() {
 	// Load image
 	img = new Image();
 	img.src = 'img/dragon.png';
@@ -330,8 +425,8 @@ function LoadSampleImage() {
 	  img.style.display = 'none';
 	  console.log(ctx.getImageData(0, 0, 1, 1).data);*/
 	  
-	  ResizeImage();
-	  RepaintImage();
+	  resizeImage();
+	  repaintImage();
 	};
 	
 	// Initialize slider
@@ -345,11 +440,11 @@ function LoadSampleImage() {
 		/*svgImage.each(function(i, children) {
 			this.transform({ scale: imgScale })
 		});*/
-		ResizeImage();
+		resizeImage();
 	};
 }
 
-function ResizeImage() {
+function resizeImage() {
 	svgImage
 		.size(img.width * imgScale, img.height * imgScale);
 	
@@ -398,7 +493,7 @@ function ResizeImage() {
 	}
 }
 
-function RepaintImage() {
+function repaintImage() {
 	// Replace color array values
 	arrayLength = imageColorsChange.length;
 	for (let i = 0; i < arrayLength; i++) {
@@ -531,9 +626,9 @@ function hsvToRgb(h, s, v) {
 }
 
 // https://github.com/Simonwep/pickr
-function CreateColorPicker() {
+function createColorPicker() {
 	// Simple example, see optional options for more configuration.
-	const pickr = Pickr.create({
+	window.pickr = Pickr.create({
 		el: '.color-picker',
 		theme: 'classic', // or 'monolith', or 'nano'
 		defaultRepresentation: 'HSVA',
@@ -577,43 +672,53 @@ function CreateColorPicker() {
 	});
 	
 	pickr.on('change', (color, instance) => {
-		instance.applyColor();
+		instance.applyColor(); // call save event
+	}).on('save', (color, instance) => {
 		let colorH = color.h != 360 ? color.h : 0;
-		DrawColorRamp(colorH, color.s, color.v);
-		RepaintImage();
-	})/*.on('save', (color, instance) => {
-		instance.hide();
-	}).*/
+		
+		let diffHue = colorH - functionHues[amountOfColorsPerSide];
+		let diffSaturation = color.s - functionSaturations[amountOfColorsPerSide]
+		let diffValue = color.v - functionValues[amountOfColorsPerSide]
+		drawColorRamp(diffHue, diffSaturation, diffValue);
+		repaintImage();
+		//instance.hide();
+	});
+}
+
+function updateColorPicker() {
+	//window.pickr.setColor(baseColor); // avoid this, changes pickr to rgba
+	window.pickr.setHSVA(baseHue, baseSaturation, baseValue, 1.0);
+	window.pickr.applyColor();
 }
 
 // Example from: https://www.chartjs.org/samples/latest/charts/line/basic.html
 // Dataset from: https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes
-function ShowChart() {
+function showChart() {
 	let colorIndices = [];
 	for (let i = 0; i < amountOfColors; i++) {
 		colorIndices[i] = i;
 	}
 	
-	//let colorHues = [];
+	let colorHues = [];
 	let colorSaturations = [];
 	let colorBrightness = [];
 	for (let i = 0; i < amountOfColors; i++) {
-		//colorHues[i] = Math.round(colorsHSV[i].hue / 360 * 100);
-		colorSaturations[i] = colorsHSV[i].saturation;
-		colorBrightness[i] = colorsHSV[i].value;
+		colorHues[i] = Math.round(hues[i] / 360 * 100);
+		colorSaturations[i] = saturations[i];
+		colorBrightness[i] = values[i];
 	}
 
 	let config = {
 		type: 'line',
 		data: {
 			labels: colorIndices,
-			datasets: [/*{
+			datasets: [{
 				label: 'Hue',
 				backgroundColor: window.chartColors.red,
 				borderColor: window.chartColors.red,
 				data: colorHues,
 				fill: false,
-			},*/ {
+			}, {
 				label: 'Saturation',
 				backgroundColor: window.chartColors.green,
 				borderColor: window.chartColors.green,
@@ -666,5 +771,23 @@ function ShowChart() {
 	
 	// ShowGraph
 	let ctx = document.getElementById('canvas').getContext('2d');
-	window.myLine = new Chart(ctx, config);
+	window.lineDiagram = new Chart(ctx, config);
+}
+
+function updateChart() {
+	let colorHues = [];
+	let colorSaturations = [];
+	let colorBrightness = [];
+	for (let i = 0; i < amountOfColors; i++) {
+		colorHues[i] = Math.round(hues[i] / 360 * 100);
+		colorSaturations[i] = saturations[i];
+		colorBrightness[i] = values[i];
+	}
+	
+	let datasets = window.lineDiagram.chart.data.datasets;
+	datasets[0].data = colorHues;
+	datasets[1].data = colorSaturations;
+	datasets[2].data = colorBrightness;
+	
+	lineDiagram.update();
 }

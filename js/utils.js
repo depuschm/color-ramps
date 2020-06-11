@@ -2,7 +2,7 @@
 // From: view-source:https://www.chartjs.org/samples/latest/charts/line/basic.html
 
 window.chartColors = {
-	red: 'rgb(255, 99, 132)',
+	red: 'rgb(232, 122, 56)', // red: 'rgb(255, 99, 132)',
 	orange: 'rgb(255, 159, 64)',
 	yellow: 'rgb(255, 205, 86)',
 	green: 'rgb(43, 116, 69)', //green: 'rgb(75, 192, 192)',
