@@ -1,5 +1,5 @@
 # color-ramps
-A [website](https://rayo3.github.io/hue-shifting/) that uses hue shifting to find good color ramps for pixel art.
+A [website](https://rayo3.github.io/color-ramps) that uses hue shifting to find good color ramps for pixel art.
 
 ## About
 The approach how colors are calculated is based on the idea of this [video](https://www.youtube.com/watch?v=QhgSM_tnPM4).
