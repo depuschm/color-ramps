@@ -35,6 +35,9 @@ let colorRampElements = [];
 let functions = [];
 let currentFunction;
 
+//let repaintImageTimer;
+//let repaintImageTimeout = 300;
+
 initFunctions();
 setFunction(0);
 
@@ -98,9 +101,63 @@ function initFunctions() {
 		saturations: [ 20,  40,  60,  70,  75,  60,  45,  30,  15],
 		values:      [ 15,  30,  45,  60,  70,  80,  90,  95, 100]
 	}
+	
+	// Custom function: log, Webers law
+	// https://rechneronline.de/funktionsgraphen/
+	let hues = [];
+	let saturations = [];
+	let values = [];
+	hues.length = amountOfColors;
+	saturations.length = amountOfColors;
+	values.length = amountOfColors;
+	
+	for (let i = 0; i < amountOfColors; i++) {
+		let colorAmount = amountOfColors-1;
+		//let x = i * (100/(amountOfColors-1));
+		
+		hues[i] = functions[0].hues[i];
+		saturations[i] = functions[0].saturations[i];
+		//values[i] = i*(100/colorAmount);
+		
+		//if (i == 0) values[i] = 0;
+		//else values[i] = Math.log(i + 1) * 45.5;
+		
+		//values[i] = Math.pow(i, 2.218);
+		
+		//values[i] = 40 + Math.pow(i, 1.97);
+		//values[i] = 30 + Math.pow(i, 2.045);
+		
+		//values[i] = sigmoid((i-colorAmount/2) * 1.0) * 100;
+		
+		//let scale = 0.7;
+		//values[i] = 10*(colorAmount-colorAmount*scale)/2 + sigmoid(i-colorAmount/2) * 10*colorAmount*scale;
+	
+		//let scale = 1.2;
+		//hues[i] = 10*(colorAmount-colorAmount*scale)/2 + sigmoid(i-colorAmount/2) * 10*colorAmount*scale;
+		//saturations[i] = sigmoid(i-colorAmount/2) * 10*colorAmount;
+		
+		//hues[i] = -sigmoid((i-colorAmount/2) * 0.3) * 360 - 60;
+		hues[i] = -i*(360/colorAmount)*0.54 + 0.62 * 360;
+		saturations[i] = -Math.pow(i-colorAmount/2, 2)*(colorAmount/2)*((0.67 * 100)/Math.pow(colorAmount, 2)) + (0.67 * 100);
+		values[i] = i*(100/colorAmount);
+	}
+	
+	functions[3] = {
+		hues:        hues,
+		saturations: saturations,
+		values:      values
+	}
 }
 
-function initFunctionselection() {
+/*function getBaseLog(x, y) {
+  return Math.log(y) / Math.log(x);
+}*/
+
+function sigmoid(x) {
+    return 1/(1+Math.pow(Math.E, -x));
+}
+
+function initFunctionSelection() {
 	let select = document.getElementById('selectFunction');
 	let option;
 	for (let i = 0; i < functions.length; i++) {
@@ -137,6 +194,8 @@ function setFunction(i) {
 	
 	rgb = hsvToRgb(baseHue, baseSaturation, baseValue);
 	baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+	
+	//setRampColors(baseHue, baseSaturation, baseValue);
 	
 	/*hues = functions[currentFunction].hues;
 	saturations = functions[currentFunction].saturations;
@@ -193,11 +252,15 @@ function setRampColors(hue, saturation, value) {
 	saturations = [20, 40, 60, 70, 75, 60, 45, 30, 15]
 	values = [15, 30, 45, 60, 70, 80, 90, 95, 100];*/
 	
+	let diffHue = hue - functionHues[amountOfColorsPerSide];
+	let diffSaturation = saturation - functionSaturations[amountOfColorsPerSide];
+	let diffValue = value - functionValues[amountOfColorsPerSide];
+	
 	// Set base and ramp colors
 	for (let i = 0; i < amountOfColors; i++) {
-		hues[i] = mod(functionHues[i] + hue, 360);
-		saturations[i] = functionSaturations[i] + saturation;
-		values[i] = functionValues[i] + value;
+		hues[i] = mod(functionHues[i] + diffHue, 360);
+		saturations[i] = functionSaturations[i] + diffSaturation;
+		values[i] = functionValues[i] + diffValue;
 	}
 	
 	baseHue = hues[amountOfColorsPerSide];
@@ -259,7 +322,7 @@ function clamp(num, min, max) {
 // Uses SVG.js
 // Link: https://svgjs.com/docs/3.0/
 function initHueShifting() {
-	initFunctionselection();
+	initFunctionSelection();
 	createColorPicker();
 	
 	/*let hueChange = 20;
@@ -302,8 +365,13 @@ function initHueShifting() {
 	// Show chart
 	showChart();
 	
-	//drawColorRamp(baseHue, baseSaturation, baseValue);
-	drawColorRamp(0, 0, 0);
+	drawColorRamp(baseHue, baseSaturation, baseValue);
+	//drawColorRamp(0, 0, 0);
+	/*drawColorRamp(
+		functions[currentFunction].hues[amountOfColorsPerSide],
+		functions[currentFunction].saturations[amountOfColorsPerSide],
+		functions[currentFunction].values[amountOfColorsPerSide]
+	);*/
 	
 	loadSampleImage();
 }
@@ -675,15 +743,20 @@ function createColorPicker() {
 		instance.applyColor(); // call save event
 	}).on('save', (color, instance) => {
 		let colorH = color.h != 360 ? color.h : 0;
-		
-		let diffHue = colorH - functionHues[amountOfColorsPerSide];
-		let diffSaturation = color.s - functionSaturations[amountOfColorsPerSide]
-		let diffValue = color.v - functionValues[amountOfColorsPerSide]
-		drawColorRamp(diffHue, diffSaturation, diffValue);
+		drawColorRamp(colorH, color.s, color.v);
 		repaintImage();
+		
+		/*if (repaintImageTimer == null) {
+			repaintImageTimer = window.setTimeout(resetImageTimer, repaintImageTimeout);
+		}*/
 		//instance.hide();
 	});
 }
+
+/*function resetImageTimer() {
+	repaintImage();
+	repaintImageTimer = null;
+}*/
 
 function updateColorPicker() {
 	//window.pickr.setColor(baseColor); // avoid this, changes pickr to rgba
