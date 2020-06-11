@@ -137,9 +137,16 @@ function initFunctions() {
 		//saturations[i] = sigmoid(i-colorAmount/2) * 10*colorAmount;
 		
 		//hues[i] = -sigmoid((i-colorAmount/2) * 0.3) * 360 - 60;
+		
+		// For function 1:
 		hues[i] = -i*(360/colorAmount)*0.54 + 0.62 * 360;
 		saturations[i] = -Math.pow(i-colorAmount/2, 2)*(colorAmount/2)*((0.67 * 100)/Math.pow(colorAmount, 2)) + (0.67 * 100);
 		values[i] = i*(100/colorAmount);
+		
+		// For function 2:
+		/*hues[i] = i*(360/colorAmount)*0.35 + 0.83 * 360;
+		saturations[i] = -Math.pow(i-colorAmount/2, 2)*(colorAmount/2)*((0.67 * 100)/Math.pow(colorAmount, 2)) + (0.67 * 100);
+		values[i] = sigmoid((i-colorAmount/2) * 1.0) * 100 + 35;*/
 	}
 	
 	functions[3] = {
@@ -195,7 +202,8 @@ function setFunction(i) {
 	rgb = hsvToRgb(baseHue, baseSaturation, baseValue);
 	baseColor = "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
 	
-	//setRampColors(baseHue, baseSaturation, baseValue);
+	// needed, else hue is shown incorrect after changing function
+	setRampColors(baseHue, baseSaturation, baseValue);
 	
 	/*hues = functions[currentFunction].hues;
 	saturations = functions[currentFunction].saturations;
