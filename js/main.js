@@ -468,39 +468,51 @@ function rgbToHex(r, g, b) {
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
 // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
 // https://stackoverflow.com/questions/19262141/resize-image-with-javascript-canvas-smoothly
-//let canvasPadding = 10;
+let canvasPadding = 0; // doesn't work yet
 let imgScale = 2.0;
+let canvasImage, ctxImage;
+let canvasImageBase, ctxImageBase;
 //let maxScale = 6.0;
 let img;
-let svgImage;
+//let svgImage;
 let initImage = false;
 
 function loadSampleImage() {
 	// Load image
 	img = new Image();
+	img.crossOrigin = 'anonymous';
 	img.src = 'img/dragon.png';
+	//img.style.display = 'none';
 	
-	svgImage = SVG().addTo('svgimage');
+	//svgImage = SVG().addTo('svgimage');
 	//	.size(img.width * imgScale, img.height * imgScale);
 	
-	//let canvas = document.getElementById('imgCanvas');
-	//let ctx = canvas.getContext('2d');
+	canvasImage = document.getElementById('canvasImage');
+	ctxImage = canvasImage.getContext('2d');
+	
+	canvasImageBase = document.getElementById('canvasImageBase');
+	canvasImageBase.style.display="none"
+	ctxImageBase = canvasImageBase.getContext('2d');
 	
 	img.onload = function() {
-	  // set size proportional to image
-	  /*let canvasWidth = img.width + 2*canvasPadding;
-	  let canvasHeight = img.height + 2*canvasPadding;
+	  canvasImageBase.width = img.width;
+	  canvasImageBase.height = img.height;
 	  
-	  ctx.canvas.width = canvasWidth;
-	  ctx.canvas.height = canvasWidth * (canvasHeight / canvasWidth);*/
+	  // Draw base image
+	  ctxImageBase.drawImage(img, 0, 0);
 	  
-	  // Draw image
-	  /*ctx.drawImage(img, 0, 0);
-	  img.style.display = 'none';
-	  console.log(ctx.getImageData(0, 0, 1, 1).data);*/
-	  
+	  // Draw scaled image
 	  resizeImage();
 	  repaintImage();
 	};
@@ -517,15 +529,36 @@ function loadSampleImage() {
 			this.transform({ scale: imgScale })
 		});*/
 		resizeImage();
+		repaintImage();
 	};
 }
 
 function resizeImage() {
-	svgImage
-		.size(img.width * imgScale, img.height * imgScale);
+	// set size proportional to image
+	let canvasWidth = img.width * imgScale + 2*canvasPadding;
+	let canvasHeight = img.height * imgScale + 2*canvasPadding;
 	
-	/*let imageData = ctx.getImageData(canvasPadding, canvasPadding,
-		canvas.width - canvasPadding, canvas.height - canvasPadding);
+	canvasImage.width = canvasWidth;
+	canvasImage.height = canvasWidth * (canvasHeight / canvasWidth);
+	
+	// Enable nearest neighbor scale on all devices
+	ctxImage.imageSmoothingEnabled = false;
+	ctxImage.webkitImageSmoothingEnabled = false;
+	ctxImage.msImageSmoothingEnabled = false;
+	ctxImage.imageSmoothingEnabled = false;
+	
+	// Set scaling of canvas
+	ctxImage.scale(imgScale, imgScale);
+	
+	/*ctxImage.scale(2, 2);
+	ctxImage.fillRect(10,10,10,10);
+	ctxImage.setTransform(1, 0, 0, 1, 0, 0);*/
+	
+	//ctxImage.scale(10, 3);
+	//ctxImage.scale(imgScale, imgScale);
+	
+	/*let imageData = ctxImage.getImageData(canvasPadding, canvasPadding,
+		canvasImage.width - canvasPadding, canvasImage.height - canvasPadding);
 	let data = imageData.data;
 	
 	for (let i = 0; i < data.length; i += 4) {
@@ -536,8 +569,12 @@ function resizeImage() {
       data[i + 2] = avg; // blue
     }
 	
-	ctx.putImageData(imageData, canvasPadding, canvasPadding);*/
-	let pos;
+	ctxImage.putImageData(imageData, canvasPadding, canvasPadding);*/
+	
+	/*svgImage
+		.size(img.width * imgScale, img.height * imgScale);
+	
+	/*let pos;
 	let width = img.width;
 	let height = img.height;
 	
@@ -566,7 +603,7 @@ function resizeImage() {
 				.move(Math.floor(x * imgScale), Math.floor(y * imgScale));
 			i++;
 		});
-	}
+	}*/
 }
 
 function repaintImage() {
@@ -579,9 +616,26 @@ function repaintImage() {
 	}
 	
 	// Repaint image
-	svgImage.each(function(i, children) {
+	/*svgImage.each(function(i, children) {
 		this.fill(imageColors[i]);
-	});
+	});*/
+	
+	// https://stackoverflow.com/questions/26692575/html5-canvas-fastest-way-to-display-an-array-of-pixel-colors-on-the-screen
+	// https://stackoverflow.com/questions/3448347/how-to-scale-an-imagedata-in-html-canvas
+	// We draw into base canvas and draw a scaled version of base canvas into scaled canvas
+	let imageData = ctxImageBase.getImageData(0, 0,
+		canvasImageBase.width, canvasImageBase.height);
+	let data = imageData.data;
+	for (let i = 0; i < data.length; i += 4) {
+		let rgb = hexToRgb(imageColors[i/4]);
+		
+		data[i]     = rgb.r; // red
+		data[i + 1] = rgb.g; // green
+		data[i + 2] = rgb.b; // blue
+		//data.data[i + 3] = 255; // alpha
+    }
+	ctxImageBase.putImageData(imageData, canvasPadding, canvasPadding);
+	ctxImage.drawImage(canvasImageBase, canvasPadding, canvasPadding);
 }
 
 /*function inRange(n, min, max) {
@@ -851,7 +905,7 @@ function showChart() {
 	};
 	
 	// ShowGraph
-	let ctx = document.getElementById('canvas').getContext('2d');
+	let ctx = document.getElementById('canvasGraph').getContext('2d');
 	window.lineDiagram = new Chart(ctx, config);
 }
 

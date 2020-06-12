@@ -8,5 +8,6 @@ https://www.slynyrd.com/blog/2018/1/10/pixelblog-1-color-palettes (with function
 https://www.google.de/search?ei=ZOrfXs7mO8-Wa5rmk9gF&q=color+scheme+algorithm+pixelart
 
 Interesting links:
+- https://ourcodeworld.com/articles/read/403/top-5-best-image-color-extraction-javascript-and-jquery-plugins
 - https://jariz.github.io/vibrant.js/
 - https://github.com/lokesh/color-thief

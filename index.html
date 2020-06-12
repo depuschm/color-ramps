@@ -37,7 +37,8 @@
   <body>
 	 <!--<button type="button" onclick="ConstructColorScheme()">Construct Scheme</button>--> 
 	 <colorramp></colorramp>
-	 <svgimage></svgimage>
+	 <canvas id="canvasImageBase" width="0" height="0" style="border:1px solid #d3d3d3;"></canvas>
+	 <canvas id="canvasImage" width="0" height="0" style="border:1px solid #d3d3d3;"></canvas>
 	 <br><br>
 	 
 	 <!-- Image scale slider -->
@@ -57,7 +58,7 @@
 	 
 	 <!-- Graph canvas -->
 	 <div style="width:494px; height:270px;">
-		<canvas id="canvas"></canvas>
+		<canvas id="canvasGraph"></canvas>
 	 </div>
   </body>
 </html>
