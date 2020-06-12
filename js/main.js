@@ -138,9 +138,23 @@ function initFunctions() {
 		
 		//hues[i] = -sigmoid((i-colorAmount/2) * 0.3) * 360 - 60;
 		
+		// Calculate open downwards polynom with zero points in 0 and colorAmount
+		// Function was calculated with equation system of function f(x) = b - x_1*|x - s|^n
+		// f(0) = 0 = b - x_1*|0-s|^n
+		// f(s*2) = 0 = b - x_1*|(s*2)-s|^n
+		// => solve for x_1, (b, s, n) are fix
+		// https://www.wolframalpha.com/input/?i=solve+b+-+x*%7C0-s%7C%5En+%3D+0%2C+b+-+x*%7C%28s*2%29-s%7C%5En+%3D+0+for+x
+		// => f(x) = b - (b/|s|^n)*|x - s|^n
+		// https://www.wolframalpha.com/input/?i=b+-+%28b%2F%7Cs%7C%5En%29*%7Cx+-+s%7C%5En
+		// Simplify formula: f(x) = b*(1 - |s/(x - s)|^-n) = b*(1 - |x/s - 1|^n)
+		let s = colorAmount/2; // index of highest point
+		let b = 67; // highest point
+		let n = 3.5; // stretch factor
+		let downwardsPolynom = b * (1 - Math.pow(Math.abs(i / s - 1), n));
+		
 		// For function 1:
-		hues[i] = -i*(360/colorAmount)*0.54 + 0.62 * 360;
-		saturations[i] = -Math.pow(i-colorAmount/2, 2)*(colorAmount/2)*((0.67 * 100)/Math.pow(colorAmount, 2)) + (0.67 * 100);
+		hues[i] = -i*(360/colorAmount)*0.52 + 0.62 * 360;
+		saturations[i] = downwardsPolynom;
 		values[i] = i*(100/colorAmount);
 		
 		// For function 2:
