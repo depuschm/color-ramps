@@ -479,7 +479,7 @@ function hexToRgb(hex) {
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
 // https://stackoverflow.com/questions/19262141/resize-image-with-javascript-canvas-smoothly
-let canvasPadding = 0; // doesn't work yet
+let canvasPadding = 10;
 let imgScale = 2.0;
 let canvasImage, ctxImage;
 let canvasImageBase, ctxImageBase;
@@ -502,7 +502,7 @@ function loadSampleImage() {
 	ctxImage = canvasImage.getContext('2d');
 	
 	canvasImageBase = document.getElementById('canvasImageBase');
-	canvasImageBase.style.display="none"
+	canvasImageBase.style.display = "none";
 	ctxImageBase = canvasImageBase.getContext('2d');
 	
 	img.onload = function() {
@@ -535,11 +535,11 @@ function loadSampleImage() {
 
 function resizeImage() {
 	// set size proportional to image
-	let canvasWidth = img.width * imgScale + 2*canvasPadding;
-	let canvasHeight = img.height * imgScale + 2*canvasPadding;
+	let canvasWidth = canvasImageBase.width * imgScale + 2*canvasPadding;
+	let canvasHeight = canvasImageBase.height * imgScale + 2*canvasPadding;
 	
 	canvasImage.width = canvasWidth;
-	canvasImage.height = canvasWidth * (canvasHeight / canvasWidth);
+	canvasImage.height = canvasHeight; //canvasWidth * (canvasHeight / canvasWidth);
 	
 	// Enable nearest neighbor scale on all devices
 	ctxImage.imageSmoothingEnabled = false;
@@ -626,16 +626,19 @@ function repaintImage() {
 	let imageData = ctxImageBase.getImageData(0, 0,
 		canvasImageBase.width, canvasImageBase.height);
 	let data = imageData.data;
+	let ii = 0;
 	for (let i = 0; i < data.length; i += 4) {
-		let rgb = hexToRgb(imageColors[i/4]);
+		let rgb = hexToRgb(imageColors[ii]);
 		
 		data[i]     = rgb.r; // red
 		data[i + 1] = rgb.g; // green
 		data[i + 2] = rgb.b; // blue
 		//data.data[i + 3] = 255; // alpha
+		
+		ii++;
     }
-	ctxImageBase.putImageData(imageData, canvasPadding, canvasPadding);
-	ctxImage.drawImage(canvasImageBase, canvasPadding, canvasPadding);
+	ctxImageBase.putImageData(imageData, 0, 0);
+	ctxImage.drawImage(canvasImageBase, canvasPadding/imgScale, canvasPadding/imgScale);
 }
 
 /*function inRange(n, min, max) {
